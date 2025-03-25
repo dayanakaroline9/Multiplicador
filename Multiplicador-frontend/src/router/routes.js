@@ -1,4 +1,4 @@
-import { isLoggedIn } from 'src/utils/auth';  // Importa a função que verifica se o usuário está logado
+//import { isLoggedIn } from 'src/utils/auth';  // Importa a função que verifica se o usuário está logado
 
 const routes = [
   {
@@ -15,14 +15,14 @@ const routes = [
     children: [
       { path: '', component: () => import('src/pages/PageAdmin.vue') }
     ],
-    // Protege a rota /Home
+    /* Protege a rota /Home
     beforeEnter: (to, from, next) => {
       if (isLoggedIn()) {
         next(); // Usuário logado, permite o acesso
       } else {
         next('/login'); // Usuário não logado, redireciona para o login
       }
-    }
+    }*/
   },
 
   // Sempre deixe isso por último, mas você também pode removê-lo

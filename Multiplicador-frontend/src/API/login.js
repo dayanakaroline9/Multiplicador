@@ -1,16 +1,21 @@
 import axios from './axiosConfig'; 
 
-//Realiza requisição de login
+// login.js (frontend)
+import Cookies from 'js-cookie';
+
 async function login(email, senha) {
   try {
-    const response = await axios.post('/api/login', { email, senha });
+    const response = await axios.post('/api/login', { email, senha }, { withCredentials: true });
 
-    // Se a resposta for bem-sucedida, retorna os dados do usuário
-    if (response.data.message) {
-      return { error: response.data.message }; // Exibe mensagem caso não haja token
+    // Se o login for bem-sucedido, salva o token no cookie
+    if (response.data.message === 'Login bem-sucedido') {
+      // Armazenando o token no cookie
+      Cookies.set('token', response.data.token, { expires: 1 });  // Expira em 1 dia
+      console.log("Login bem-sucedido, redirecionando...");
+      return { message: 'Login bem-sucedido' };
     }
 
-    return response.data;
+    return { error: response.data.message };
   } catch (error) {
     console.error("Erro no login:", error);
     return { 
@@ -29,9 +34,6 @@ const logout = async () => {
     // Limpar os dados de sessão (token, informações do usuário, etc.)
     localStorage.removeItem("token");  // Caso use localStorage
     sessionStorage.removeItem("token");  // Caso use sessionStorage
-
-    // Redirecionar ou realizar outra ação após o logout, como redirecionar para a página de login
-    window.location.href = '/login';  // Exemplo de redirecionamento
   } catch (error) {
     console.error("Erro ao fazer logout:", error);
   }

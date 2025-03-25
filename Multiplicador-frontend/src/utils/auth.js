@@ -1,6 +1,8 @@
 
 export function isLoggedIn() {
-  // Verifique se o token está presente no localStorage ou sessionStorage
-  return !!localStorage.getItem('token');  // Retorna true se o token existir
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  console.log("Verificando se usuário está logado:", token);
+  return !!token; // Retorna true se o token existir
 }
+
   

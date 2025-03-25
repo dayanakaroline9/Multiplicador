@@ -84,40 +84,40 @@
   </q-page>
 </template>
 
+
 <script setup>
-import { ref, computed} from "vue";
+import { ref} from "vue";
 import { buscarVendas, Editar } from "src/API/vendas";
 
+import Cookies from 'js-cookie'; 
 
-// Estado do usuário
 const usuarioAtual = ref({
-  email: "usuario@exemplo.com",
-  tipo: "admin",
+  tipo: 'admin',  // ou o valor que você tem para o tipo de usuário
+  email: Cookies.get('user_email') || '', // Recupera o email do cookie
 });
+
+const totalVendas= 0;
+const vendasFiltradas = ref([]);
+
+const meta = 0;
 
 // Filtros
 const filtroEmail = ref(usuarioAtual.value.tipo === "admin" ? "" : usuarioAtual.value.email);
 const dataInicio = ref("");
 const dataFim = ref("");
+const ticketMedio = 0;
+const metaPercentual = 0;
+const qtdVendas =0;
 
-const vendas = ref([]);
-
-
-const totalVendas = computed(() => {
-  return vendas.value.reduce((total, venda) => total + (venda.valorBase || 0), 0);
-});
-
-const meta = ref(10000); // Defina um valor padrão ou obtenha de outra fonte
-
-const ticketMedio = computed(() => {
-  return vendas.value.length > 0 ? totalVendas.value / vendas.value.length : 0;
-});
-
-const metaPercentual = computed(() => {
-  return meta.value && totalVendas.value
-    ? Math.round((totalVendas.value / meta.value) * 100)
-    : 0;
-});
+const colunas = [
+  { name: 'dataVenda', label: 'Data de Venda', align: 'left', field: 'dataVenda', sortable: true },
+  { name: 'contrato', label: 'Contrato', align: 'left', field: 'contrato', sortable: true },
+  { name: 'proposta', label: 'Proposta', align: 'left', field: 'proposta', sortable: true },
+  { name: 'emailResponsavel', label: 'E-mail do Responsável', align: 'left', field: 'emailResponsavel', sortable: true },
+  { name: 'valorBase', label: 'Valor Base', align: 'left', field: 'valorBase', sortable: true },
+  { name: 'status', label: 'Status', align: 'left', field: 'status', sortable: true },
+  // Adicione mais colunas conforme necessário
+];
 
 
 // Função para formatar valores em moeda
@@ -128,6 +128,15 @@ const formatarMoeda = (valor) => {
     currency: "BRL",
   });
 };
+
+//cores do card de meta dependendo do percentual
+const getColorClass = (percentual) => {
+  if (percentual >= 100) return "bg-green-4";
+  if (percentual >= 75) return "bg-yellow-4";
+  if (percentual >= 50) return "bg-orange-4";
+  return "bg-red-4";
+};
+
 
 const carregando = ref(false);
 
@@ -142,14 +151,33 @@ const carregarDados = async () => {
 
   try {
     const resposta = await buscarVendas(filtroEmail.value, dataInicio.value, dataFim.value);
+
     if (resposta.error) {
       console.error("Erro ao buscar vendas:", resposta.error);
       carregando.value = false;
       return;
     }
 
-    vendas.value = resposta.vendas || [];
-    meta.value = resposta.meta || 10000;
+    // Supondo que resposta.vendas seja um array de objetos, você pode processá-lo assim:
+    vendasFiltradas.value = resposta.vendas.map(venda => ({
+      id: venda.id,
+      dataVenda: venda.dataVenda,
+      contrato: venda.contrato,
+      proposta: venda.proposta,
+      emailResponsavel: venda.emailResponsavel,
+      dataAverbacao: venda.dataAverbacao,
+      valorBase: venda.valorBase,
+      valorFinanciado: venda.valorFinanciado,
+      tabConvenio: venda.tabConvenio,
+      valorMultiplicador: venda.valorMultiplicador,
+      status: venda.status,
+      valorParcela: venda.valorParcela,
+      valorDivida: venda.valorDivida,
+      prazo: venda.prazo,
+    }));
+
+    meta.value = resposta.meta || '';
+
   } catch (error) {
     console.error("Erro ao carregar dados:", error);
   }
@@ -158,21 +186,14 @@ const carregarDados = async () => {
 };
 
 
-
-// Computação das vendas filtradas
-const vendasFiltradas = computed(() => {
-  if (usuarioAtual.value.tipo === "admin") {
-    return vendas.value;
-  }
-  return vendas.value.filter(venda => venda.emailResponsavel === usuarioAtual.value.email);
-});
-
 // Edição de vendas
 const dialogEditar = ref(false);
 const vendaEdit = ref({});
 const statusOptions = ["Pago", "Confirmado", "Cancelado"];
 
 const editarVenda = (venda) => {
+  dialogEditar.value = true;
+
   vendaEdit.value = {
     id: venda.id || null,
     dataVenda: venda.dataVenda || "",
@@ -184,21 +205,15 @@ const editarVenda = (venda) => {
     valorFinanciado: venda.valorFinanciado || 0,
     tabConvenio: venda.tabConvenio || "",
     valorMultiplicador: venda.valorMultiplicador || 0,
-    status: venda.status || "Confirmado",  // Defina um valor padrão se necessário
+    status: venda.status || "Confirmado",  
     valorParcela: venda.valorParcela || 0,
     valorDivida: venda.valorDivida || 0,
     prazo: venda.prazo || 0,
   };
 
-  dialogEditar.value = true;
+  
 };
 
-const getColorClass = (percentual) => {
-  if (percentual >= 100) return "bg-green-4";
-  if (percentual >= 75) return "bg-yellow-4";
-  if (percentual >= 50) return "bg-orange-4";
-  return "bg-red-4";
-};
 
 const salvarEdicaoVenda = async () => {
   const resultado = await Editar(vendaEdit.value);  // Corrigido para passar vendaEdit.value

@@ -44,7 +44,8 @@ import { ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 import { login } from 'src/API/login'
-import { buscarVendas } from 'src/API/vendas'
+//import { buscarVendas } from 'src/API/vendas'
+
 
 const email = ref('')
 const password = ref('')
@@ -58,32 +59,45 @@ async function fazerLogin() {
 
   try {
     // Chama a API de login
-    const response = await login(email.value, password.value)
+    const response = await login(email.value, password.value);
+    console.log("Resposta do login:", response);
+
 
     // Se houver erro no login, exibe a notificação com a mensagem
     if (response.error) {
-      $q.notify({ type: 'negative', message: response.error })
-      return
+      $q.notify({ type: 'negative', message: response.error });
+      return;
     }
 
-    const { Usuario } = response // A resposta já contém o usuário
+    // Salva o token no localStorage (ou sessionStorage)
+    localStorage.setItem("token", response.token); 
 
-    // Chama a função buscarVendas apenas se for um admin
-    if (Usuario.role === 'admin') {
-      buscarVendas() // Passe parâmetros para essa função, caso necessário
-    } else {
-      // Listar vendas do usuário (implementação necessária)
-    }
+    /*const userEmail = email.value;
+    const hoje = new Date();
+    const dataInicio = new Date();
+    dataInicio.setDate(hoje.getDate() - 30); // 30 dias atrás
+
+    // Formatando datas para string ISO (caso necessário para o backend)
+    const dataInicioISO = dataInicio.toISOString().split('T')[0]; // YYYY-MM-DD
+    const dataFimISO = hoje.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    // Chama a função buscarVendas
+    console.log("Chamando buscarVendas...");
+    const venda = await buscarVendas(userEmail, dataInicioISO, dataFimISO);
+    console.log("Resposta de buscarVendas:", venda);*/
 
     // Exibe uma notificação de sucesso
     $q.notify({ type: 'positive', message: 'Login bem-sucedido!' })
 
     // Redireciona para a página Home após login bem-sucedido
-    router.push('/Home')
+    console.log("Redirecionando para /Home...");
+    router.push('/Home');
+
+
   } catch (error) {
-    console.error("Erro no login:", error)
-    $q.notify({ type: 'negative', message: 'Erro ao fazer login. Tente novamente.' })
-  } finally {
+  console.error("Erro no login:", error);
+  $q.notify({ type: 'negative', message: 'Erro ao fazer login. Tente novamente.' });
+  }finally {
     loading.value = false
   }
 }
